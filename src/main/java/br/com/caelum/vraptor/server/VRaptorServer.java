@@ -6,18 +6,23 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.server.ssl.SslSocketConnector;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 public class VRaptorServer {
 
 	private final Server server;
 	private final ContextHandlerCollection contexts;
+    private static final String KEYSTORE_LOCATION = "jetty.jks";
+    private static final String KEYSTORE_PASS = "password";
 
 	public VRaptorServer(String webappDirLocation, String webXmlLocation) {
 		this.server = createServer();
@@ -89,21 +94,41 @@ public class VRaptorServer {
 			throw new RuntimeException(e);
 		}
 	}
+	
+    private static Server createServer() {
+        Server server = new Server();
+        SslContextFactory sslContextFactory = new SslContextFactory(KEYSTORE_LOCATION);
+        sslContextFactory.setKeyStorePassword(KEYSTORE_PASS);
+ 
+        SslSocketConnector connector = new SslSocketConnector(sslContextFactory);
+        connector.setPort(8443);
+        server.setConnectors(new Connector[] { connector });
+        
+        String webHost = getHost();
+        if (webHost == null || webHost.isEmpty()) {
+            webHost = System.getProperty("server.host", "0.0.0.0");
+        }
+        server.getConnectors()[0].setHost(webHost);
+        server.setAttribute("jetty.host", webHost);
+        
+        return server;
+    }
 
-	private static Server createServer() {
-		String webPort = getPort();
-		if (webPort == null || webPort.isEmpty()) {
-			webPort = System.getProperty("server.port", "8080");
-		}
-		Server server = new Server(Integer.valueOf(webPort));
-		String webHost = getHost();
-		if (webHost == null || webHost.isEmpty()) {
-			webHost = System.getProperty("server.host", "0.0.0.0");
-		}
-		server.getConnectors()[0].setHost(webHost);
-		server.setAttribute("jetty.host", webHost);
-		return server;
-	}
+
+//	private static Server createServer() {
+//		String webPort = getPort();
+//		if (webPort == null || webPort.isEmpty()) {
+//			webPort = System.getProperty("server.port", "8080");
+//		}
+//		Server server = new Server(Integer.valueOf(webPort));
+//		String webHost = getHost();
+//		if (webHost == null || webHost.isEmpty()) {
+//			webHost = System.getProperty("server.host", "0.0.0.0");
+//		}
+//		server.getConnectors()[0].setHost(webHost);
+//		server.setAttribute("jetty.host", webHost);
+//		return server;
+//	}
 
 	private static String getPort() {
 		String port = System.getenv("PORT");
