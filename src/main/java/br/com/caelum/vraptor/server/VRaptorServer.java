@@ -21,7 +21,7 @@ public class VRaptorServer {
 
 	private final Server server;
 	private final ContextHandlerCollection contexts;
-    private static final String KEYSTORE_LOCATION = "jetty.jks";
+    private static final String KEYSTORE_LOCATION = "WEB-INF/classes/jetty.jks";
     private static final String KEYSTORE_PASS = "password";
 
 	public VRaptorServer(String webappDirLocation, String webXmlLocation) {
@@ -99,7 +99,8 @@ public class VRaptorServer {
         Server server = new Server();
         SslContextFactory sslContextFactory = new SslContextFactory(KEYSTORE_LOCATION);
         sslContextFactory.setKeyStorePassword(KEYSTORE_PASS);
- 
+        sslContextFactory.addExcludeProtocols("SSLv3", "TLSv1.0", "TLSv1.1");
+        
         SslSocketConnector connector = new SslSocketConnector(sslContextFactory);
         connector.setPort(8443);
         server.setConnectors(new Connector[] { connector });
