@@ -21,11 +21,17 @@ public class VRaptorServer {
 
 	private final Server server;
 	private final ContextHandlerCollection contexts;
-    private static final String KEYSTORE_LOCATION = "WEB-INF/classes/jetty.jks";
-    private static final String KEYSTORE_PASS = "password";
+    private static final String DEFAULT_KEYSTORE_PATH = "WEB-INF/classes/jetty.jks";
+    private static final String DEFAULT_KEYSTORE_PASSWORD = "";
 
 	public VRaptorServer(String webappDirLocation, String webXmlLocation) {
-		this.server = createServer();
+		boolean useSecureServer = Boolean.parseBoolean(System.getProperty("server.https", "false"));
+		if (useSecureServer) {
+			this.server = createSecureServer();
+		} else {
+			this.server = createServer();
+		}
+		
 		this.contexts = new ContextHandlerCollection();
 		reloadContexts(webappDirLocation, webXmlLocation);
 	}
@@ -37,7 +43,6 @@ public class VRaptorServer {
 		} else {
 			contexts.setHandlers(new Handler[]{context});
 		}
-
 	}
 
 	public void start() throws Exception {
@@ -95,14 +100,28 @@ public class VRaptorServer {
 		}
 	}
 	
-    private static Server createServer() {
+    private static Server createSecureServer() {
         Server server = new Server();
-        SslContextFactory sslContextFactory = new SslContextFactory(KEYSTORE_LOCATION);
-        sslContextFactory.setKeyStorePassword(KEYSTORE_PASS);
-        sslContextFactory.addExcludeProtocols("SSLv3", "TLSv1.0", "TLSv1.1");
+        SslContextFactory sslContextFactory = new SslContextFactory(getKeyStorePath());
+        sslContextFactory.setKeyStorePassword(getKeyStorePassword());
+        sslContextFactory.addExcludeProtocols("SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1");
+        sslContextFactory.addExcludeCipherSuites(
+        		"TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+        		"SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
+        		"SSL_RSA_WITH_RC4_128_SHA",
+        		"TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA",
+        		"TLS_ECDHE_RSA_WITH_RC4_128_SHA",
+        		"TLS_ECDH_ECDSA_WITH_RC4_128_SHA",
+        		"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA",
+        		"TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
+        		"TLS_ECDH_RSA_WITH_RC4_128_SHA",
+        		"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+        		"SSL_RSA_WITH_RC4_128_MD5",
+        		"SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
+        		"SSL_RSA_WITH_3DES_EDE_CBC_SHA");
         
         SslSocketConnector connector = new SslSocketConnector(sslContextFactory);
-        connector.setPort(8443);
+        connector.setPort(Integer.valueOf(getPort("8443")));
         server.setConnectors(new Connector[] { connector });
         
         String webHost = getHost();
@@ -115,32 +134,39 @@ public class VRaptorServer {
         return server;
     }
 
+	private static Server createServer() {
+		String webPort = getPort("8080");
+		Server server = new Server(Integer.valueOf(webPort));
+		String webHost = getHost();
+		server.getConnectors()[0].setHost(webHost);
+		server.setAttribute("jetty.host", webHost);
+		return server;
+	}
 
-//	private static Server createServer() {
-//		String webPort = getPort();
-//		if (webPort == null || webPort.isEmpty()) {
-//			webPort = System.getProperty("server.port", "8080");
-//		}
-//		Server server = new Server(Integer.valueOf(webPort));
-//		String webHost = getHost();
-//		if (webHost == null || webHost.isEmpty()) {
-//			webHost = System.getProperty("server.host", "0.0.0.0");
-//		}
-//		server.getConnectors()[0].setHost(webHost);
-//		server.setAttribute("jetty.host", webHost);
-//		return server;
-//	}
-
-	private static String getPort() {
+	private static String getPort(String defaultPort) {
 		String port = System.getenv("PORT");
+		if (port == null || port.isEmpty()) {
+			port = System.getProperty("server.port", defaultPort);
+		}
 		return port;
 	}
 	
 	private static String getHost() {
 		String host = System.getenv("HOST");
+		if (host == null || host.isEmpty()) {
+			host = System.getProperty("server.host", "0.0.0.0");
+		}
 		return host;
 	}
+	
+	private static String getKeyStorePath() {
+		return System.getProperty("server.https.keystore.path", DEFAULT_KEYSTORE_PATH);
+	}
 
+	private static String getKeyStorePassword() {
+		return System.getProperty("server.https.keystore.password", DEFAULT_KEYSTORE_PASSWORD);
+	}
+	
 	public void stop() {
 		try {
 			this.server.stop();
