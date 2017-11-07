@@ -67,8 +67,10 @@
 <link rel="stylesheet" href="/css/deps/pickadate/classic.date.css">
 <!-- endbuild -->
 
+<!-- 
 <link rel="stylesheet" href="${contextPath}/css/deps/custom.css">
-
+ -->
+ 
 <!--[if lt IE 9]>
 	<script src="<c:url value="/js/html5shiv.js"/>"></script>
 <![endif]-->
