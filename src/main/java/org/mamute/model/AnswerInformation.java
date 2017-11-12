@@ -32,7 +32,7 @@ public class AnswerInformation implements Information {
 	private String markedDescription;
 
 	@Lob
-	@Length(min = 30)
+	@Length(min = 5)
 	@NotEmpty
 	private String description;
 

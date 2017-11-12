@@ -35,8 +35,8 @@ import com.google.common.collect.ImmutableList;
 public class QuestionDAOTest extends DatabaseTestCase {
 
 	private static final String INVALID_TITLE = "Tiny title";
-	private static final MarkedText INVALID_DESC = notMarked("Tiny desc");
-	private static final MarkedText VALID_DESC = notMarked("Description with more than 30 characters");
+	private static final MarkedText INVALID_DESC = notMarked("Tiny");
+	private static final MarkedText VALID_DESC = notMarked(">5 chars");
 	private static final String VALID_TITLE = "Title with more than 15 characters";
 	private QuestionDAO questionsBeingAuthor;
 	private QuestionBuilder question = new QuestionBuilder();
@@ -71,7 +71,7 @@ public class QuestionDAOTest extends DatabaseTestCase {
 	}
 	
 	@Test(expected=ConstraintViolationException.class)
-	public void should_throw_constraint_exception_if_description_has_less_than_30_chars() {
+	public void should_throw_constraint_exception_if_description_has_less_than_5_chars() {
 		Question myQuestion = question.withTitle(VALID_TITLE).withDescription(INVALID_DESC).withAuthor(author).build();
 		questionsBeingAuthor.save(myQuestion);
 	}

@@ -20,7 +20,7 @@
 
 	<c:set var="descriptionPlaceholder" value="${t['question.description.placeholder']}"/>
 	<tags:markDown placeholder="${descriptionPlaceholder}" value="${question.description}"
-				   hintId="question-description-hint" htmlClass="required description-input" minlength="30"/>
+				   hintId="question-description-hint" htmlClass="required description-input" minlength="5"/>
 
 	<c:if test="${env.supports('feature.inhouse.upload')}">
 		<tags:fileUploader/>

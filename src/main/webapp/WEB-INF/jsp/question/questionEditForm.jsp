@@ -15,7 +15,7 @@
 		   value="<c:out value="${question.title}" escapeXml="true"/>" data-hint-id="question-title-hint" minlength="15"
 		   maxlength="150" name="title">
 	<tags:markDown value="${question.description}" hintId="question-description-hint" htmlClass="required"
-				   minlength="30"/>
+				   minlength="5"/>
 
     <c:if test="${env.supports('feature.inhouse.upload')}">
         <tags:fileUploader attachmentsTarget="${question}"/>
